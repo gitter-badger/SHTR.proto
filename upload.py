@@ -1,43 +1,44 @@
 #!/usr/bin/python
 
 import httplib2
-import pprint
-import unicodedata
-from PySide.QtCore import QUrl
-import webbrowser
 import urllib
 
 from apiclient import errors
 from apiclient.discovery import build
 from apiclient.http import MediaFileUpload
 from oauth2client.client import flow_from_clientsecrets
-from PySide.QtCore import *
-from PySide.QtGui import *
-from PySide.QtWebKit import *
+from oauth2client.file import Storage
 
 PATH_TO_SECRET = 'client_secrets.json'
 
+# Copy your credentials from the APIs Console
+CLIENT_ID = '82388069862-7m3uqv8ff4p2hc5korrs66n7lata3dbr.apps.googleusercontent.com'
+CLIENT_SECRET = 'IuZt1FYe69121OpJ4rjQAXPl'
+TOKEN_FILE_NAME = 'token.json'
+
+# Check https://developers.google.com/drive/scopes for all available scopes
+AUTH_SCOPE = 'https://www.googleapis.com/auth/drive.file'
+
+flow = flow_from_clientsecrets(PATH_TO_SECRET, AUTH_SCOPE, redirect_uri="http://localhost:8080")
+storage = Storage('SHTR_token')
+
 def get_permission_url():
-    # Copy your credentials from the APIs Console
-    CLIENT_ID = '82388069862-7m3uqv8ff4p2hc5korrs66n7lata3dbr.apps.googleusercontent.com'
-    CLIENT_SECRET = 'IuZt1FYe69121OpJ4rjQAXPl'
-
-    # Check https://developers.google.com/drive/scopes for all available scopes
-    AUTH_SCOPE = 'https://www.googleapis.com/auth/drive.file'
-
     # Run through the OAuth flow and retrieve credentials
-    flow = flow_from_clientsecrets(PATH_TO_SECRET, AUTH_SCOPE, redirect_uri="urn:ietf:wg:oauth:2.0:oob")
     authorize_url = flow.step1_get_authorize_url()
     return urllib.unquote(authorize_url)
 
-def get_drive_service(verification_code):
+def save_credentials(verification_code):
     """returns a google drive service"""
     credentials = flow.step2_exchange(verification_code)
+    storage.put(credentials)
 
-    #Create an httplib2.Http object and authorize it with our credentials
+def get_credentials():
+    return storage.get()
+
+def get_drive_service():
+    credentials = get_credentials()
     http = httplib2.Http()
     http = credentials.authorize(http)
-
     drive_service = build('drive', 'v2', http=http)
     return drive_service
 
@@ -79,6 +80,4 @@ def insert_file(service, title, description, parent_id, mime_type, filename):
 
 
 if __name__ == '__main__':
-    svc = build_service()
-    f = insert_file(svc, "Garbage", "Just a throwaway file", None, "text/plain", "gbg.gbg" )
-    print "File uploaded"
+    pass

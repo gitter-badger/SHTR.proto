@@ -1,9 +1,9 @@
 import sys
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PySide.QtGui import QLabel, QWidget, QPushButton, QDesktopServices, QVBoxLayout, QApplication
 from datetime import datetime
 from upload import *
-
+from auth_server import *
+from cherrypy import quickstart
 
 #create a Qt App
 date = datetime.now()
@@ -13,30 +13,32 @@ widget = QWidget()
 widget.setLayout(QVBoxLayout())
 
 label = QLabel()
-window = QMainWindow()
-window.resize(800,600)
-window.hide()
+#signal = Signal('First signal')
 
-web = QWebView(window)
-web.resize(800,600)
+def receive_verification_code(sender):
+    save_credentials(sender)
+
+def redirect_to_permission_page():
+    QDesktopServices.openUrl(get_permission_url())
+    #threading.Thread(target=quickstart(AuthVerification))
+    quickstart(AuthVerification())
+
 
 def shoot():
     #taking the screenshot
-    filename = date.strftime('%Y-%m-%d_%H-%M-%S.jpg')
-    p = QPixmap.grabWindow(QApplication.desktop().winId())
-    p.save(filename, 'jpg')
+    #filename = date.strftime('%Y-%m-%d_%H-%M-%S.jpg')
+    #p = QPixmap.grabWindow(QApplication.desktop().winId())
+    #p.save(filename, 'jpg')
 
-    #building the web-service for uploading
-    window.show()
-    web.show()
-    web.load(get_permission_url())
-    web.loadFinished()
+
+
     #insert_file(service, filename, 'SHTR SHOT', None, 'image/jpg', filename)
 
-widget.layout().addWidget(QPushButton('take screenshot', clicked=shoot))
+widget.layout().addWidget(QPushButton('Setup Google Drive', clicked=shoot))
+dispatcher.connect(receive_verification_code)
 
 widget.show()
-app.exec_()
+
 
 #enter Qt App main loop
 app.exec_()

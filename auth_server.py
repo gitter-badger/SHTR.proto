@@ -1,11 +1,11 @@
 import cherrypy
 from pydispatch import dispatcher
 
-class AuthVerification(object):
+class AuthVerificationServer(object):
 
     verification_code = ''
-
-
+    def stop_server(self):
+        cherrypy.engine.exit()
 
     @cherrypy.expose()
     def index(self, code=''):

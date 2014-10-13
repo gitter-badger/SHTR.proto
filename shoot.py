@@ -1,5 +1,5 @@
 import sys
-from PySide.QtGui import QLabel, QWidget, QPushButton, QDesktopServices, QVBoxLayout, QApplication
+from PySide.QtGui import QLabel, QWidget, QPushButton, QDesktopServices, QVBoxLayout, QApplication, QPixmap
 from datetime import datetime
 from upload import *
 from auth_server import *
@@ -11,28 +11,38 @@ app = QApplication(sys.argv)
 widget = QWidget()
 # set up the QWidget...
 widget.setLayout(QVBoxLayout())
-
 label = QLabel()
-#signal = Signal('First signal')
+auth_server = AuthVerificationServer()
+
+
+def isTokenCollected():
+    if(get_credentials() != None):
+        return True
+    else:
+        return False
 
 def receive_verification_code(sender):
     save_credentials(sender)
+    auth_server.stop_server()
+
 
 def redirect_to_permission_page():
     QDesktopServices.openUrl(get_permission_url())
-    #threading.Thread(target=quickstart(AuthVerification))
-    quickstart(AuthVerification())
-
+    quickstart(auth_server)
 
 def shoot():
+    if( not isTokenCollected()):
+        redirect_to_permission_page()
+
     #taking the screenshot
-    #filename = date.strftime('%Y-%m-%d_%H-%M-%S.jpg')
-    #p = QPixmap.grabWindow(QApplication.desktop().winId())
-    #p.save(filename, 'jpg')
+    filename = date.strftime('%Y-%m-%d_%H-%M-%S.jpg')
+    p = QPixmap.grabWindow(QApplication.desktop().winId())
+    p.save(filename, 'jpg')
+    upload_file_to_drive(filename)
 
-
-
-    #insert_file(service, filename, 'SHTR SHOT', None, 'image/jpg', filename)
+def upload_file_to_drive(fname):
+    service = get_drive_service()
+    insert_file(service, fname, 'SHTR SHOT', None, 'image/jpg', fname)
 
 widget.layout().addWidget(QPushButton('Setup Google Drive', clicked=shoot))
 dispatcher.connect(receive_verification_code)

@@ -3,9 +3,9 @@
 import httplib2
 import urllib
 
-from apiclient import errors
-from apiclient.discovery import build
-from apiclient.http import MediaFileUpload
+from googleapiclient import errors
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
 

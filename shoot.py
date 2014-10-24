@@ -1,55 +1,48 @@
 import sys
-from PySide.QtGui import QLabel, QWidget, QPushButton, QDesktopServices, QVBoxLayout, QApplication, QPixmap
-from datetime import datetime
-from upload import *
-from auth_server import *
-from cherrypy import quickstart
+from PySide.QtGui import *
+from PySide.QtWebKit import QWebView
+from oauth_verification import Authenticator
+from PySide.QtCore import QUrl
 
-#create a Qt App
-date = datetime.now()
-app = QApplication(sys.argv)
-widget = QWidget()
-# set up the QWidget...
-widget.setLayout(QVBoxLayout())
-label = QLabel()
-auth_server = AuthVerificationServer()
+class App:
+    def __init__(self):
+        self.app = QApplication(sys.argv)
+        self.view = QWebView()
+        icon = QIcon("shutter.png")
+        menu = QMenu()
+        settingAction = menu.addAction("Settings")
+        exitAction = menu.addAction("Exit")
+        settingAction.triggered.connect(self.setting)
+        exitAction.triggered.connect(sys.exit)
 
+        self.tray = QSystemTrayIcon()
+        self.tray.setIcon(icon)
+        self.tray.setContextMenu(menu)
+        self.tray.show()
 
-def isTokenCollected():
-    if(get_credentials() != None):
-        return True
-    else:
-        return False
+    def redirect_to_permision_url(self, url):
+        self.view = QWebView()
+        self.view.load(QUrl(url))
+        self.view.show()
+        self.view.loadFinished.connect(self.load1)
 
-def receive_verification_code(sender):
-    save_credentials(sender)
-    auth_server.stop_server()
+    def load1(self):
+       self.view.urlChanged.connect(self.onUrlChange)
 
+    def onUrlChange(self, url):
+        print url
 
-def redirect_to_permission_page():
-    QDesktopServices.openUrl(get_permission_url())
-    quickstart(auth_server)
+    def start(self):
+        self.app.exec_()
+        sys.exit()
 
-def shoot():
-    if( not isTokenCollected()):
-        redirect_to_permission_page()
+    def setting(self):
+        self.dialog = QDialog()
+        self.dialog.setWindowTitle("The Setting Dialog")
+        self.dialog.show()
 
-    #taking the screenshot
-    filename = date.strftime('%Y-%m-%d_%H-%M-%S.jpg')
-    p = QPixmap.grabWindow(QApplication.desktop().winId())
-    p.save(filename, 'jpg')
-    upload_file_to_drive(filename)
-
-def upload_file_to_drive(fname):
-    service = get_drive_service()
-    insert_file(service, fname, 'SHTR SHOT', None, 'image/jpg', fname)
-
-widget.layout().addWidget(QPushButton('Setup Google Drive', clicked=shoot))
-dispatcher.connect(receive_verification_code)
-
-widget.show()
-
-
-#enter Qt App main loop
-app.exec_()
-sys.exit()
+if __name__ == "__main__":
+    app = App()
+    auth = Authenticator()
+    app.redirect_to_permision_url(auth._get_permission_url())
+    app.start()

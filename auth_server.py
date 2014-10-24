@@ -1,5 +1,5 @@
 import cherrypy
-from pydispatch import dispatcher
+from shoot import receive_verification_code
 
 class AuthVerificationServer(object):
 
@@ -10,6 +10,6 @@ class AuthVerificationServer(object):
     @cherrypy.expose()
     def index(self, code=''):
         verification_code = code
-        dispatcher.send(sender=code)
+	receive_verification_code(code)
         return "<h1>You have successfully setup Google Drive.</h1>"
 

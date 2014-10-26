@@ -4,6 +4,7 @@ from datetime import datetime
 from PySide.QtGui import *
 from PySide.QtWebKit import QWebView
 from PySide.QtCore import QUrl
+from PySide.QtCore import Qt
 from PySide.QtCore import QRect, QSize
 
 from oauth_verification import Authenticator
@@ -12,9 +13,13 @@ from oauth_verification import Authenticator
 class TransWidget(QWidget):
     def __init__(self):
         super(TransWidget, self).__init__()
+        self.setWindowFlags(Qt.FramelessWindowHint)
         self.setWindowOpacity(0.3)
+
+    def startShot(self):
         self.setFocus()
-        self.showMaximized()
+        self.showFullScreen()
+
         self.band = QRubberBand(QRubberBand.Rectangle, self)
 
     def mousePressEvent(self, event):
@@ -32,6 +37,13 @@ class TransWidget(QWidget):
 
     def mouseReleaseEvent(self, event):
         super(TransWidget, self).mouseReleaseEvent(event)
+        print "Mouse is released"
+        self.rect = self.band.geometry()
+        x = self.rect.getRect()
+        print x
+        self.hide()
+        p = QPixmap.grabWindow(QApplication.desktop().winId(), x[0], x[1], x[2], x[3])
+        p.save("region", 'jpg')
         self.band.hide()
 
 class App:
@@ -64,11 +76,13 @@ class App:
 
     def takeFullWindowShot(self):
         self.filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.jpg')
-        p = QPixmap.grabWindow(QApplication.desktop().winId())
+        p = QPixmap.grabWindow(QApplication.desktop().winId() , 100, 200, 300, 500)
         p.save(self.filename, 'jpg')
 
     def takeRegionShot(self):
         self.transWidget = TransWidget()
+        self.transWidget.startShot()
+
 
     def load1(self):
        self.view.urlChanged.connect(self.onUrlChange)

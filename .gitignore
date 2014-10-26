@@ -1,3 +1,5 @@
 *.jpg
 client_secrects.json
 .DS_STORE
+.idea
+*.pyc
